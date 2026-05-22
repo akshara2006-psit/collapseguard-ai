@@ -1,24 +1,57 @@
 # CollapseGuard
 
-A full-stack web application built using React (frontend) and FastAPI (Python backend), featuring GitHub OAuth authentication and Firebase integration for scalable authentication and backend services.
+CollapseGuard is an AI-powered developer wellness intelligence platform that analyzes developer behavioral patterns from GitHub activity to predict burnout risk. The system uses machine learning, behavioral feature engineering, and real-time analytics to transform developer activity data into actionable insights and intervention recommendations.
 
 ---
 
 ## Overview
 
-CollapseGuard is a modular full-stack application designed to handle secure authentication, backend API communication, and frontend state management. It integrates GitHub OAuth for login and Firebase for additional services such as authentication and configuration management.
+CollapseGuard is designed to detect early signs of developer burnout by analyzing behavioral signals such as coding activity patterns, workload distribution, and time-based contribution behavior. It builds predictive models that estimate burnout risk and visualizes insights through an interactive analytics dashboard.
+
+The system also includes simulation-based digital twin modeling to represent and analyze how developer behavior evolves over time under different workload conditions.
 
 ---
 
-## Features
+## Key Features
 
-- GitHub OAuth authentication flow
-- Fast and responsive React (Vite) frontend
-- FastAPI-based backend service
-- Firebase integration for authentication/services
-- Secure API communication between frontend and backend
-- Environment-based configuration using .env files
-- Modular and scalable project structure
+- AI-based burnout risk prediction using behavioral data
+- GitHub activity pattern analysis (commit timing, frequency, intensity)
+- Feature engineering from developer behavioral signals
+- Detection of late-night coding activity patterns
+- Workload volatility and weekend activity analysis
+- Digital twin simulation for developer behavior modeling
+- Real-time analytics dashboard with interactive visualizations
+- Burnout forecasting and trend analysis
+- Intervention and reflection tracking system
+
+---
+
+## System Architecture
+
+### 1. Data Layer
+- GitHub activity signals (simulated or extracted behavioral metrics)
+- Time-series behavioral data processing
+
+### 2. Feature Engineering Layer
+- Late-night activity scoring
+- Weekend intensity tracking
+- Workload volatility measurement
+- Behavioral pattern normalization
+
+### 3. Machine Learning Layer
+- Burnout risk prediction model
+- Time-based forecasting engine
+- Behavioral classification logic
+
+### 4. Backend Layer (FastAPI)
+- API endpoints for predictions and analytics
+- Data processing pipeline
+- Model inference handling
+
+### 5. Frontend Layer (React)
+- Interactive analytics dashboard
+- Real-time visualization of burnout metrics
+- User insights and prediction display
 
 ---
 
@@ -27,21 +60,46 @@ CollapseGuard is a modular full-stack application designed to handle secure auth
 ### Frontend
 - React.js (Vite)
 - JavaScript (ES6+)
-- Firebase SDK
-- Fetch API / Axios
+- Data visualization libraries (charts/graphs)
 
 ### Backend
 - FastAPI (Python)
 - Uvicorn ASGI server
-- Requests library
+- Python data processing libraries
 
-### Authentication
-- GitHub OAuth 2.0  
-  GitHub Inc. (developer platform for OAuth authentication)
+### Machine Learning
+- Behavioral analytics modeling
+- Time-series prediction logic
+- Feature engineering pipelines
 
-- Firebase  
-  Google Firebase (backend-as-a-service platform)
+---
 
+## Core Modules
+
+### 1. Behavioral Analysis Engine
+Processes developer activity patterns and extracts meaningful behavioral indicators.
+
+### 2. Burnout Prediction System
+Uses engineered features to predict burnout probability and risk levels.
+
+### 3. Digital Twin Simulation
+Simulates developer behavior under different workload conditions to analyze long-term impact.
+
+### 4. Analytics Dashboard
+Displays real-time insights, predictions, and behavioral trends using interactive visualizations.
+
+---
+
+## Project Flow
+User Behavioral Data
+↓
+Feature Engineering Layer
+↓
+ML Prediction Model
+↓
+FastAPI Backend (Inference API)
+↓
+React Dashboard Visualization
 ---
 
 ## Project Structure
@@ -105,25 +163,13 @@ Backend not starting
 
 Ensure main.py exists inside backend directory and uvicorn command references correct app instance.
 
-**OAuth issues
-
-Check:
-
-Correct GitHub client ID and secret
-Correct callback URL
-Backend running before login attempt
-Firebase issues
-
-**Verify:
-
-Firebase config values
+---
+# Future Improvements
+Integration with real GitHub API data
+Advanced deep learning-based prediction models
+Personalized burnout prevention recommendations
+Long-term productivity tracking system
+Team-level burnout analytics
+Deployment with scalable cloud architecture
 Proper initialization in frontend
 
-
-**Future Improvements
-JWT-based authentication system
-Database integration (PostgreSQL or Firestore)
-Role-based access control
-Protected frontend routes
-Deployment on cloud platforms
-Session persistence and refresh tokens
