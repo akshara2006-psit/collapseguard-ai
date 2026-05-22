@@ -2,12 +2,12 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCcj8JLD_5TSYk1ZAaRtFPeR3SxqBwEcKM",
-  authDomain: "collapse-guard.firebaseapp.com",
-  projectId: "collapse-guard",
-  storageBucket: "collapse-guard.firebasestorage.app",
-  messagingSenderId: "380005838648",
-  appId: "1:380005838648:web:c065ddf74800f24dde1bcd",
+apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_APP_ID,
 };
 
 const app = initializeApp(firebaseConfig);
