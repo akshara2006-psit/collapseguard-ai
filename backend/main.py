@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from auth import router as auth_router
 import os
 import requests
@@ -453,3 +455,8 @@ def predict_burnout(req: PredictRequest):
     except Exception as e:
         print("PREDICT ERROR:", e)
         return {"prediction": [scores[-1]] * 4}
+        app.mount("/assets", StaticFiles(directory="dist/assets"), name="assets")
+
+@app.get("/{full_path:path}")
+async def serve_react_app(full_path: str):
+    return FileResponse("dist/index.html")
