@@ -1,42 +1,34 @@
-# from sklearn.ensemble import IsolationForest
-
-# def detect_burnout(feature_matrix):
-
-#     if feature_matrix is None or len(feature_matrix) < 4:
-#         return "Not enough historical data"
-
-#     model = IsolationForest(contamination=0.25, random_state=42)
-#     model.fit(feature_matrix)
-
-#     predictions = model.predict(feature_matrix)
-
-#     return "High Burnout Risk" if predictions[-1] == -1 else "Normal"
 import numpy as np
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
-from datetime import datetime
-
+from datetime import datetime, timedelta
+import statistics
 
 def calculate_late_night_intensity(commits):
     total_commits = 0
     late_night_commits = 0
 
     for commit in commits:
-        dt = datetime.fromisoformat(commit["date"])
-        count = commit["count"]
-
-        total_commits += count
-
-        if 0 <= dt.hour < 4:
-            late_night_commits += count
+        if not isinstance(commit, dict):
+            continue
+        date_str = commit.get("date")
+        if not date_str:
+            continue
+        try:
+            clean_date = str(date_str).replace("Z", "+00:00")
+            dt = datetime.fromisoformat(clean_date)
+            count = commit.get("count", 1)
+            total_commits += count
+            if 0 <= dt.hour < 5:
+                late_night_commits += count
+        except Exception:
+            continue
 
     if total_commits == 0:
         return 0
 
     lni = (late_night_commits / total_commits) * 100
     return min(lni, 100)
-
-from datetime import timedelta
 
 def calculate_work_streak_index(daily_commit_map):
     """
@@ -46,14 +38,18 @@ def calculate_work_streak_index(daily_commit_map):
         ...
     }
     """
+    if not daily_commit_map:
+        return 0
 
     dates = sorted(daily_commit_map.keys(), reverse=True)
-
     streak = 0
     prev_date = None
 
     for date_str in dates:
-        current_date = datetime.fromisoformat(date_str)
+        try:
+            current_date = datetime.fromisoformat(date_str[:10])
+        except Exception:
+            continue
 
         if daily_commit_map[date_str] > 0:
             if prev_date is None:
@@ -71,20 +67,21 @@ def calculate_work_streak_index(daily_commit_map):
     wsi = (streak / 14) * 100
     return min(wsi, 100)
 
-import statistics
-
 def calculate_volatility_index(last_14_days_counts):
-    if len(last_14_days_counts) < 2:
+    if not last_14_days_counts or len(last_14_days_counts) < 2:
         return 0
 
-    std_dev = statistics.stdev(last_14_days_counts)
+    try:
+        std_dev = statistics.stdev(last_14_days_counts)
+    except Exception:
+        return 0
 
     # Normalize assuming 0–10 typical range
     avi = (std_dev / 10) * 100
     return min(avi, 100)
 
 def calculate_spike_crash(last_14_days_counts):
-    if len(last_14_days_counts) < 14:
+    if not last_14_days_counts or len(last_14_days_counts) < 14:
         return 0
 
     first_week = sum(last_14_days_counts[:7])
@@ -103,32 +100,7 @@ def calculate_burnout_score(lni, wsi, avi, scp):
     )
     return min(round(score, 2), 100)
 
-# def generate_recommendation(score, lni, streak_days):
-#     if score <= 30:
-#         return {
-#             "risk_level": "Stable",
-#             "recommendation": "Work pattern appears sustainable."
-#         }
-
-#     elif score <= 60:
-#         return {
-#             "risk_level": "Warning",
-#             "recommendation": "Mild burnout risk detected. Reduce late-night work."
-#         }
-
-#     elif score <= 80:
-#         return {
-#             "risk_level": "High",
-#             "recommendation": "High burnout risk. Recommend 24–48 hour recovery window."
-#         }
-
-#     else:
-#         return {
-#             "risk_level": "Critical",
-#             "recommendation": "Critical overload detected. Immediate rest advised."
-#         }
 def generate_recommendation(score, lni, wsi, entropy, weekend_ratio):
-
     insights = []
 
     if lni > 30:
@@ -160,8 +132,9 @@ def generate_recommendation(score, lni, wsi, entropy, weekend_ratio):
         "recommendation": insights
     }
 
-
 def calculate_productivity_entropy(commit_counts):
+    if not commit_counts:
+        return 0
     total = sum(commit_counts)
     if total == 0:
         return 0
@@ -171,19 +144,26 @@ def calculate_productivity_entropy(commit_counts):
 
     return round(entropy * 10, 2)
 
-
 def calculate_weekend_ratio(commits):
     weekend_commits = 0
     total_commits = 0
 
     for entry in commits:
-        date_obj = datetime.fromisoformat(entry["date"])
-        count = entry["count"]
+        if not isinstance(entry, dict):
+            continue
+        date_str = entry.get("date")
+        if not date_str:
+            continue
+        try:
+            clean_date = str(date_str).replace("Z", "+00:00")
+            date_obj = datetime.fromisoformat(clean_date)
+            count = entry.get("count", 1)
 
-        total_commits += count
-
-        if date_obj.weekday() >= 5:
-            weekend_commits += count
+            total_commits += count
+            if date_obj.weekday() >= 5:
+                weekend_commits += count
+        except Exception:
+            continue
 
     if total_commits == 0:
         return 0
@@ -202,7 +182,6 @@ def calculate_commit_clustering(commit_counts):
     return round(clustering_score, 2)
 
 def detect_burnout(commits, daily_commit_map, last_14_days_counts):
-
     lni = calculate_late_night_intensity(commits)
     wsi = calculate_work_streak_index(daily_commit_map)
     avi = calculate_volatility_index(last_14_days_counts)
@@ -210,55 +189,45 @@ def detect_burnout(commits, daily_commit_map, last_14_days_counts):
     entropy_index = calculate_productivity_entropy(last_14_days_counts)
     weekend_ratio = calculate_weekend_ratio(commits)
     clustering_index = calculate_commit_clustering(last_14_days_counts)
-    
-    # score = calculate_burnout_score(lni, wsi, avi, scp)
+
     score = (
-    0.2 * avi +
-    0.2 * wsi +
-    0.15 * lni +
-    0.1 * scp +
-    0.15 * entropy_index +
-    0.1 * weekend_ratio +
-    0.1 * clustering_index
-)
+        0.2 * avi +
+        0.2 * wsi +
+        0.15 * lni +
+        0.1 * scp +
+        0.15 * entropy_index +
+        0.1 * weekend_ratio +
+        0.1 * clustering_index
+    )
 
     score = min(round(score, 2), 100)
     predicted_burnout = min(score + (avi * 0.05), 100)
-    recommendation_data = recommendation_data = generate_recommendation(
-    score,
-    lni,
-    wsi,
-    entropy_index,
-    weekend_ratio
-)
+    recommendation_data = generate_recommendation(
+        score,
+        lni,
+        wsi,
+        entropy_index,
+        weekend_ratio
+    )
 
     return {
         "score": score,
         "status": recommendation_data["risk_level"],
         "recommendation": recommendation_data["recommendation"],
-        # "feature_breakdown": {
-        #     "late_night_intensity": lni,
-        #     "work_streak_index": wsi,
-        #     "volatility_index": avi,
-        #     "spike_crash_pattern": scp
-        # }
         "feature_breakdown": {
-    "late_night_intensity": lni,
-    "work_streak_index": wsi,
-    "volatility_index": avi,
-    "spike_crash_pattern": scp,
-    "productivity_entropy": entropy_index,
-    "weekend_ratio": weekend_ratio,
-    "commit_clustering": clustering_index
-},
-"predicted_burnout": round(predicted_burnout, 1)
+            "late_night_intensity": lni,
+            "work_streak_index": wsi,
+            "volatility_index": avi,
+            "spike_crash_pattern": scp,
+            "productivity_entropy": entropy_index,
+            "weekend_ratio": weekend_ratio,
+            "commit_clustering": clustering_index
+        },
+        "predicted_burnout": round(predicted_burnout, 1)
     }
 
-
 def generate_insights(feature_matrix):
-
     insights = []
-
     if len(feature_matrix) < 2:
         return insights
 
@@ -268,15 +237,10 @@ def generate_insights(feature_matrix):
     commits_now, night_now, days_now = current
     commits_prev, night_prev, days_prev = previous
 
-    # Commit spike detection
     if commits_prev > 0 and commits_now > commits_prev * 1.5:
         insights.append("Commit volume increased significantly from last week.")
-
-    # Night work increase
     if night_now > night_prev + 0.2:
         insights.append("Night-time activity has increased.")
-
-    # Compressed work pattern
     if commits_now > commits_prev and days_now < days_prev:
         insights.append("More work compressed into fewer days.")
 
